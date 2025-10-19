@@ -1,59 +1,61 @@
-start		::=	statement ";" | expression ";"
+start           ::= statement ";" | expression ";"
 
-statement	::=	var_decl | fn_decl | fn_call | return_stat | print_stat | println_stat | assign_stat | if_stat | for_stat | while_stat
+statement       ::= var_decl | fn_decl | fn_call | return_stat | print_stat | println_stat | assign_stat | if_stat | for_stat | while_stat
 
-body		::=	(statement ";")*
+body            ::= (statement ";")*
 
-clause		::=	(statement ";")+
+clause          ::= (statement ";")+
 
-var_decl	::=	VAR ident_list
+var_decl        ::= VAR ident_list
 
-fn_decl		::=	FUNCTION identifier "(" (ident_list)? ")" body END
+fn_decl         ::= FUNCTION identifier "(" [ ident_list ] ")" body END
 
-ident_list	::=	identifier ("," identifier)*
+ident_list      ::= identifier ("," identifier)*
 
-fn_call		::=	identifier "(" (exp_list)? ")"
+fn_call         ::= identifier "(" [ exp_list ] ")"
 
-exp_list	::=	expression ("," expression)*
+exp_list        ::= expression ("," expression)*
 
-return_stat	::=	RETURN (expression | condition)
+return_stat     ::= RETURN (expression | condition)
 
-print_stat  ::=	PRINT print_list
+print_stat      ::= PRINT print_list
 
-println_stat ::= PRINTLN (print_list)?
+println_stat    ::= PRINTLN [ print_list ]
 
-print_list	::=	(expression | STRING | IDBOOL) ("," (expression | STRING | IDBOOL))*
+print_list      ::= (expression | STRING | IDBOOL) ("," (expression | STRING | IDBOOL))*
 
-assign_stat ::= IDNUM ":=" expression | IDBOOL ":=" condition | IDVEC ":=" vec_const
+assign_stat     ::= IDNUM ":=" expression | IDBOOL ":=" condition | IDVEC ":=" vec_const
 
-if_stat		::=	IF condition THEN clause elifs (ELSE clause)? FI
+if_stat         ::= IF condition THEN clause elifs [ ELSE clause ] FI
 
-elifs		::=	(ELIF condition THEN clause)*
+elifs           ::= ( ELIF condition THEN clause )*
 
-for_stat	::=	FOR IDNUM =IN exp_list DO body END
+for_stat        ::= FOR IDNUM =IN exp_list DO body END
 
-while_stat	::=	WHILE condition DO body END
+while_stat      ::= WHILE condition DO body END
 
-condition	::=	and_clause ("|" condition)*
+condition       ::= and_clause ( "|" and_clause )*
 
-and_clause	::=	not_clause ("&" and_clause)*
+and_clause      ::= not_clause ( "&" not_clause )*
 
-not_clause	::=	"!" not_clause | "(" condition ")" | comparison | fn_call | boolean
+not_clause      ::= "!" not_clause | "(" condition ")" | comparison | fn_call | boolean_lit
 
-comparison	::=	expression comparator expression
+comparison      ::= expression comparator expression
 
-expression	::=	("+" | "-")? product (("+" | "-") expression)*
+expression      ::= [ ("+" | "-") ] product expression_tail
+expression_tail ::= ( ("+" | "-") product )*
 
-product		::=	term (("*" | "/") product)*
+product         ::= term product_tail
+product_tail    ::= ( ("*" | "/") term )*
 
-term		::=	"(" expression ")" | fn_call | simple_term
+term            ::= "(" expression ")" | fn_call | simple_term
 
-simple_term	::=	IDNUM | IDVEC | NUMBER | vec_const 
+simple_term     ::= IDNUM | IDVEC | NUMBER | vec_const
 
-vec_const	::=	"[" (exp_list)? "]"
+vec_const       ::= "[" [ exp_list ] "]"
 
-comparator	::=	"<" | "<=" | ">" | ">=" |"==" | "!=" | "=in" | "!in"
+comparator      ::= "<" | "<=" | ">" | ">=" | "==" | "!=" | "=in" | "!in"
 
-identifier	::=	IDNUM | IDBOOL | IDVEC 
+identifier      ::= IDNUM | IDBOOL | IDVEC
 
-boolean		::=	IDBOOL | TRUE | FALSE
+boolean_lit     ::= IDBOOL | TRUE | FALSE
