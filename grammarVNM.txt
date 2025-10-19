@@ -42,12 +42,6 @@ not_clause      ::= "!" not_clause | "(" condition ")" | comparison | fn_call | 
 
 comparison      ::= expression comparator expression
 
-expression      ::= [ ("+" | "-") ] product expression_tail
-expression_tail ::= ( ("+" | "-") product )*
-
-product         ::= term product_tail
-product_tail    ::= ( ("*" | "/") term )*
-
 term            ::= "(" expression ")" | fn_call | simple_term
 
 simple_term     ::= IDNUM | IDVEC | NUMBER | vec_const
@@ -55,6 +49,12 @@ simple_term     ::= IDNUM | IDVEC | NUMBER | vec_const
 vec_const       ::= "[" [ exp_list ] "]"
 
 comparator      ::= "<" | "<=" | ">" | ">=" | "==" | "!=" | "=in" | "!in"
+
+expression      ::= [ ("+" | "-") ] product exp_tal
+exp_tal ::= ( ("+" | "-") product )*
+
+product         ::= term prod_tal
+prod_tal    ::= ( ("*" | "/") term )*
 
 identifier      ::= IDNUM | IDBOOL | IDVEC
 
