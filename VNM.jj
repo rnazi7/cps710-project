@@ -1,38 +1,36 @@
-options
-{
-  IGNORE_CASE=false;
-  LOOKAHEAD=2;
-  DEBUG_PARSER=false;
-  DEBUG_LOOKAHEAD=false;
+options {
+  IGNORE_CASE = false;
+  LOOKAHEAD = 2;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
 }
 
 PARSER_BEGIN(VNM)
 
-public class VNM
-{
- /**
-   * This main method is designed to read and parse multiple statements from a
-   * file, which is required by the test cases. It calls start() repeatedly.
+public class VNM {
+
+  /**
+   * Main method – runs the parser and processes multiple statements
+   * from standard input until EOF.
    */
-  public static void main(String args[]) throws ParseException {
+  public static void main(String[] args) throws ParseException {
     VNM parser = new VNM(System.in);
+
     try {
-      // Loop to process each statement until the end of the file is reached.
       while (true) {
         try {
           parser.start();
           System.out.println("Parsing succeeded.");
         } catch (ParseException e) {
-          // The start() rule throws this specific exception when it finds EOF.
-          if (e.getMessage().equals("End of File.")) {
-            break; // Exit the loop gracefully.
+          // stop when EOF is reached
+          if ("End of File.".equals(e.getMessage())) {
+            break;
           }
-          // For any other parsing error, re-throw it to be caught below.
+          // rethrow for any other parse errors
           throw e;
         }
       }
     } catch (ParseException e) {
-      // This will catch and report actual syntax errors.
       System.out.println("Parse error: " + e.getMessage());
     }
   }
@@ -40,314 +38,228 @@ public class VNM
 
 PARSER_END(VNM)
 
-TOKEN_MGR_DECLS :
-{
 
+// --------------------------------------
+// Token Manager Declarations
+// --------------------------------------
+TOKEN_MGR_DECLS : { }
+
+
+// --------------------------------------
+// Whitespace skipping
+// --------------------------------------
+SKIP : {
+    " " | "\t" | "\n" | "\r"
 }
 
-SKIP :
-{
-    " "
-  | "\t"
-  | "\n"
-  | "\r"
+
+// --------------------------------------
+// Operators and punctuation
+// --------------------------------------
+TOKEN : {
+    < LESS: "<" > | < LE: "<=" > | < GREAT: ">" > | < GE: ">=" >
+  | < EQ: "==" > | < NEQ: "!=" >
+  | < IN: "=in" > | < NOTIN: "!in" >
+  | < PLUS: "+" > | < MINUS: "-" >
+  | < TIMES: "*" > | < DIV: "/" >
+  | < AND: "&" > | < VBAR: "|" > | < NOT: "!" >
+  | < ASSGN: ":=" >
+  | < LRND: "(" > | < RRND: ")" >
+  | < LSQU: "[" > | < RSQU: "]" >
+  | < COMMA: "," > | < SCOL: ";" >
+  | < TRUE: "#1" > | < FALSE: "#0" >
+  | < RANGE: ".." >
 }
 
-TOKEN :
-{
-  < LESS:   "<" >
-| < LE:     "<=" >
-| < GREAT:  ">" >
-| < GE:     ">=" >
-| < EQ:     "==" >
-| < NEQ:    "!=" >
-| < IN:     "=in" >
-| < NOTIN:  "!in" >
-| < PLUS:   "+" >
-| < MINUS:  "-" >
-| < TIMES:  "*" >
-| < DIV:    "/" >
-| < AND:    "&" >
-| < VBAR:   "|" >
-| < NOT:    "!" >
-| < ASSGN:  ":=" >
-| < LRND:   "(" >
-| < LSQU:   "[" >
-| < RRND:   ")" >
-| < RSQU:   "]" >
-| < COMMA:  "," >
-| < SCOL:   ";" >
-| < TRUE:   "#1" >
-| < FALSE:  "#0" >
-| < RANGE:  ".." >
+
+// --------------------------------------
+// Keywords (case-insensitive)
+// --------------------------------------
+TOKEN [IGNORE_CASE]: {
+    < DO: "DO" > | < WHILE: "WHILE" > | < FOR: "FOR" >
+  | < IF: "IF" > | < THEN: "THEN" >
+  | < ELIF: "ELIF" > | < ELSE: "ELSE" > | < FI: "FI" >
+  | < FUNCTION: "FUNCTION" > | < RETURN: "RETURN" >
+  | < END: "END" > | < PRINT: "PRINT" > | < PRINTLN: "PRINTLN" >
+  | < VAR: "VAR" >
 }
 
-TOKEN [IGNORE_CASE]:
-{
-  < DO:"DO">
-| < WHILE:"WHILE">
-| < FOR:"FOR">
-| < IF:"IF">
-| < THEN:"THEN">
-| < ELIF:"ELIF">
-| < ELSE:"ELSE">
-| < FI:"FI">
-| < FUNCTION:"FUNCTION">
-| < RETURN:"RETURN">
-| < END:"END">
-| < PRINT:"PRINT">
-| < PRINTLN:"PRINTLN">
-| < VAR:"VAR">
+
+// --------------------------------------
+// Identifiers and constants
+// --------------------------------------
+TOKEN : {
+    < #DIGIT: ["0"-"9"] >
+  | < #LETTER: ["A"-"Z","a"-"z"] >
+  | < STRING: "\"" (~["\""])* "\"" >
+  | < NUMBER: (<DIGIT>)+ >
+  | < IDNUM: "#" <LETTER> (<LETTER>|<DIGIT>)* >
+  | < IDBOOL: "?" <LETTER> (<LETTER>|<DIGIT>)* >
+  | < IDVEC: "v_" (<LETTER>|<DIGIT>)+ >
 }
 
-TOKEN :
-{
-  < #DIGIT: ["0"-"9"] >
-| < #LOWER: ["a"-"z"] >
-| < #UPPER: ["A"-"Z"] >
-| < #LETTER: ["a"-"z","A"-"Z"] >
-| < STRING: "\"" (~["\""])* "\"" >
-| < NUMBER: (<DIGIT>)+ >
-| < IDNUM:  "#" <LETTER>(<LETTER>|<DIGIT>)* >
-| < IDBOOL: "?" <LETTER>(<LETTER>|<DIGIT>)* >
-| < IDVEC:  "v_" (<LETTER>|<DIGIT>)+ >
+
+// --------------------------------------
+// Single-line comments
+// --------------------------------------
+SPECIAL_TOKEN : {
+  < COMMENT_SINGLE: "//" (~["\n","\r"])* ("\r" | "\n" | "\r\n") >
 }
 
-SPECIAL_TOKEN :
-{
-  < COMMENT_SINGLE: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
-}
 
-/**
- * The start rule is the entry point for the parser.
- * It is designed to parse exactly ONE statement or expression, OR detect
- * the end of the file. The main() method's loop will call this repeatedly.
- */
+// --------------------------------------
+// Grammar Rules
+// --------------------------------------
+
+// Start rule: parses a single statement or expression at a time
 void start() :
 {}
 {
-  (
-    LOOKAHEAD(2) statement() <SCOL>
-  |
-    LOOKAHEAD(2) expression() <SCOL>
-  )
-| <EOF> { throw new ParseException("End of File."); }
+    ( LOOKAHEAD(2) statement() <SCOL>
+    | LOOKAHEAD(2) expression() <SCOL> )
+  | <EOF> { throw new ParseException("End of File."); }
 }
 
-/**
- * The statement rule was ambiguous because both fn_call and assign_stat
- * can begin with an identifier. This version uses syntactic lookahead
- * to resolve the ambiguity by checking the token that follows the identifier.
- */
+
+// --------------------------------------
+// Statements
+// --------------------------------------
 void statement() :
 {}
 {
-  LOOKAHEAD(identifier() <LRND>)
-  fn_call()
-|
-  LOOKAHEAD(identifier() <ASSGN>)
-  assign_stat()
-|
-  var_decl()
-| fn_decl()
-| return_stat()
-| print_stat()
-| println_stat()
-| if_stat()
-| for_stat()
-| while_stat()
+    LOOKAHEAD(identifier() <LRND>) fn_call()
+  | LOOKAHEAD(identifier() <ASSGN>) assign_stat()
+  | var_decl()
+  | fn_decl()
+  | return_stat()
+  | print_stat()
+  | println_stat()
+  | if_stat()
+  | for_stat()
+  | while_stat()
 }
 
-void body() :
-{}
-{
-  ( statement() <SCOL> )*
-}
 
-void clause() :
-{}
-{
-  ( statement() <SCOL> )+
-}
+// group of statements (body or clause)
+void body() : {} { ( statement() <SCOL> )* }
+void clause() : {} { ( statement() <SCOL> )+ }
 
-void var_decl() :
-{}
-{
-  <VAR> ident_list()
-}
 
-void fn_decl() :
-{}
-{
+// variable declaration
+void var_decl() : {} { <VAR> ident_list() }
+
+
+// function declaration
+void fn_decl() : {} {
   <FUNCTION> identifier() <LRND> [ ident_list() ] <RRND> body() <END>
 }
 
-void ident_list() :
-{}
-{
-  identifier() ( <COMMA> identifier() )*
-}
 
-void fn_call() :
-{}
-{
-  identifier() <LRND> [ exp_list() ] <RRND>
-}
+// comma-separated list of identifiers
+void ident_list() : {} { identifier() ( <COMMA> identifier() )* }
 
-void exp_list() :
-{}
-{
-  expression() ( <COMMA> expression() )*
-}
 
-void return_stat() :
-{}
-{
-  <RETURN> ( expression() | condition() )
-}
+// function call
+void fn_call() : {} { identifier() <LRND> [ exp_list() ] <RRND> }
 
-void print_stat() :
-{}
-{
-  <PRINT> print_list()
-}
 
-void println_stat() :
-{}
-{
-  <PRINTLN> [ print_list() ]
-}
+// expression list (for arguments, etc.)
+void exp_list() : {} { expression() ( <COMMA> expression() )* }
 
-void print_list() :
-{}
-{
+
+// return statement
+void return_stat() : {} { <RETURN> ( expression() | condition() ) }
+
+
+// print statements
+void print_stat() : {} { <PRINT> print_list() }
+void println_stat() : {} { <PRINTLN> [ print_list() ] }
+
+
+// print list can contain strings, expressions, or bool vars
+void print_list() : {} {
   ( expression() | <STRING> | <IDBOOL> )
   ( <COMMA> ( expression() | <STRING> | <IDBOOL> ) )*
 }
 
-void assign_stat() :
-{}
-{
-  ( <IDNUM> <ASSGN> expression() | <IDBOOL> <ASSGN> condition() | <IDVEC> <ASSGN> vec_const() )
+
+// assignment (number, bool, or vector)
+void assign_stat() : {} {
+  ( <IDNUM> <ASSGN> expression()
+  | <IDBOOL> <ASSGN> condition()
+  | <IDVEC> <ASSGN> vec_const() )
 }
 
-void if_stat() :
-{}
-{
+
+// --------------------------------------
+// Control structures
+// --------------------------------------
+void if_stat() : {} {
   <IF> condition() <THEN> clause() elifs() [ <ELSE> clause() ] <FI>
 }
 
-void elifs() :
-{}
-{
-  ( <ELIF> condition() <THEN> clause() )*
-}
+void elifs() : {} { ( <ELIF> condition() <THEN> clause() )* }
 
-void for_stat() :
-{}
-{
+void for_stat() : {} {
   <FOR> <IDNUM> <IN> exp_list() <DO> body() <END>
 }
 
-void while_stat() :
-{}
-{
+void while_stat() : {} {
   <WHILE> condition() <DO> body() <END>
 }
 
-void condition() :
-{}
-{
-  and_clause() ( <VBAR> and_clause() )*
+
+// --------------------------------------
+// Boolean and comparison logic
+// --------------------------------------
+void condition() : {} { and_clause() ( <VBAR> and_clause() )* }
+void and_clause() : {} { not_clause() ( <AND> not_clause() )* }
+
+void not_clause() : {} {
+  ( <NOT> not_clause()
+  | <LRND> condition() <RRND>
+  | LOOKAHEAD(expression() comparator()) comparison()
+  | fn_call()
+  | boolean_lit() )
 }
 
-void and_clause() :
-{}
-{
-  not_clause() ( <AND> not_clause() )*
+void comparison() : {} { expression() comparator() expression() }
+
+
+// --------------------------------------
+// Arithmetic expressions
+// --------------------------------------
+void expression() : {} { [ ( <PLUS> | <MINUS> ) ] product() exp_tail() }
+void exp_tail() : {} { ( ( <PLUS> | <MINUS> ) product() )* }
+
+void product() : {} { term() prod_tail() }
+void prod_tail() : {} { ( ( <TIMES> | <DIV> ) term() )* }
+
+
+// term can be a fn_call, simple value, or nested expression
+void term() : {} {
+  LOOKAHEAD(identifier() <LRND>) fn_call()
+  | simple_term()
+  | <LRND> expression() <RRND>
 }
 
-void not_clause() :
-{}
-{
-  ( <NOT> not_clause() | <LRND> condition() <RRND> | LOOKAHEAD(expression() comparator()) comparison() | fn_call() | boolean_lit() )
-}
+void simple_term() : {} { <IDNUM> | <IDVEC> | <NUMBER> | vec_const() }
 
-void comparison() :
-{}
-{
-  expression() comparator() expression()
-}
+void vec_const() : {} { <LSQU> [ exp_list() ] <RSQU> }
 
-void expression() :
-{}
-{
-  [ ( <PLUS> | <MINUS> ) ] product() expression_tail()
-}
 
-void expression_tail() :
-{}
-{
-  ( ( <PLUS> | <MINUS> ) product() )*
-}
-
-void product() :
-{}
-{
-  term() product_tail()
-}
-
-void product_tail() :
-{}
-{
-  ( ( <TIMES> | <DIV> ) term() )*
-}
-
-/**
- * The term rule was ambiguous because a fn_call and a simple_term can both
- * start with an identifier. This version uses syntactic lookahead to check
- * for the parenthesis that must follow a fn_call.
- */
-void term() :
-{}
-{
-  LOOKAHEAD(identifier() <LRND>)
-  fn_call()
-|
-  simple_term()
-|
-  <LRND> expression() <RRND>
-}
-
-void simple_term() :
-{}
-{
-  <IDNUM> | <IDVEC> | <NUMBER> | vec_const()
-}
-
-void vec_const() :
-{}
-{
-  <LSQU> [ exp_list() ] <RSQU>
-}
-
-void comparator() :
-{}
-{
+// relational operators
+void comparator() : {} {
   ( <LESS> | <LE> | <GREAT> | <GE> | <EQ> | <NEQ> | <IN> | <NOTIN> )
 }
 
-void identifier() :
-{}
-{
-  ( <IDNUM> | <IDBOOL> | <IDVEC> )
-}
 
-void boolean_lit() :
-{}
-{
-  ( <IDBOOL> | <TRUE> | <FALSE> )
-}
+// --------------------------------------
+// Identifiers and literals
+// --------------------------------------
+void identifier() : {} { ( <IDNUM> | <IDBOOL> | <IDVEC> ) }
+void boolean_lit() : {} { ( <IDBOOL> | <TRUE> | <FALSE> ) }
+
    
    
    
