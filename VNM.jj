@@ -1,6 +1,6 @@
 options {
   IGNORE_CASE = false;
-  LOOKAHEAD = 2;
+  LOOKAHEAD = 4;
   DEBUG_PARSER = false;
   DEBUG_LOOKAHEAD = false;
 }
